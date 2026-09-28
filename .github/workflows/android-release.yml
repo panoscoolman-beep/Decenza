@@ -210,6 +210,19 @@ jobs:
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | tr -d ' \t\r\n' | base64 --decode > $RUNNER_TEMP/keystore.jks
           echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/keystore.jks" >> $GITHUB_ENV
 
+      # Fail in seconds, not after the compile, when the keystore secret is truncated or the
+      # password does not open it. Prints only the decoded size, never the secret.
+      - name: Verify Android keystore
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          echo "Decoded keystore: $(stat -c%s "$ANDROID_KEYSTORE_PATH") bytes"
+          if ! keytool -list -keystore "$ANDROID_KEYSTORE_PATH" -storepass "$ANDROID_KEYSTORE_PASSWORD" -alias de1-key >/dev/null 2>&1; then
+            echo "::error::The keystore secret does not open with ANDROID_KEYSTORE_PASSWORD (truncated paste or wrong password)."
+            exit 1
+          fi
+          echo "Keystore OK (alias de1-key)"
+
       - name: Configure CMake
         run: |
           mkdir -p build
