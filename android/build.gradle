@@ -87,6 +87,10 @@ android {
     }
 
     defaultConfig {
+        // A fork's CI sets these so its APK installs beside the official app instead of
+        // replacing it. Unset (every official and local build): the official id and label.
+        applicationId = System.getenv("DECENZA_APPLICATION_ID") ?: androidPackageName
+        manifestPlaceholders["appLabel"] = System.getenv("DECENZA_APP_LABEL") ?: "Decenza"
         resConfig "en"
         minSdkVersion qtMinSdkVersion
         targetSdkVersion qtTargetSdkVersion

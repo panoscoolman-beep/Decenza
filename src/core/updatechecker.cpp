@@ -34,7 +34,11 @@
 #include <QAtomicInt>
 #include <QThread>
 
-const QString UpdateChecker::GITHUB_REPO = "Kulitorum/Decenza";
+// A fork's CI builds with -DDECENZA_UPDATE_REPO=<owner>/<repo> so its APK updates from the fork.
+#ifndef DECENZA_UPDATE_REPO
+#define DECENZA_UPDATE_REPO "Kulitorum/Decenza"
+#endif
+const QString UpdateChecker::GITHUB_REPO = QStringLiteral(DECENZA_UPDATE_REPO);
 
 // File-scope so background QFile::remove threads can read it without capturing
 // `this`. Bumped by startDownload() after a successful QFile::open() — any

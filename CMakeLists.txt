@@ -1207,6 +1207,10 @@ endif()
 target_compile_definitions(Decenza PRIVATE
     "$<${DECENZA_SIMULATOR_CONDITION}:DECENZA_SIMULATOR>")
 
+# The GitHub repository the in-app updater polls. A fork's CI overrides it.
+set(DECENZA_UPDATE_REPO "Kulitorum/Decenza" CACHE STRING "owner/repo the in-app updater checks")
+target_compile_definitions(Decenza PRIVATE DECENZA_UPDATE_REPO="${DECENZA_UPDATE_REPO}")
+
 # Link SerialPort only on desktop (not available on Android/iOS)
 if(NOT ANDROID AND NOT IOS)
     target_link_libraries(Decenza PRIVATE Qt6::SerialPort)

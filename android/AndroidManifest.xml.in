@@ -72,7 +72,7 @@
     -->
     <application
         android:name="org.qtproject.qt.android.bindings.QtApplication"
-        android:label="Decenza"
+        android:label="${appLabel}"
         android:icon="@mipmap/icon"
         android:theme="@style/AppTheme"
         android:allowBackup="true"
