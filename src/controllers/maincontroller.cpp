@@ -467,6 +467,38 @@ MainController::MainController(QNetworkAccessManager* networkManager,
     }
     setupRecipeConnections();
 
+#ifdef DECENZA_PLUS
+    // Decenza+ ships the owner's seven recipes so the gallery home is populated on a
+    // fresh install. Once only: a user who deletes them all does not get them back.
+    {
+        QSettings plusState;
+        if (!plusState.value(QStringLiteral("decenzaPlus/recipesSeeded")).toBool()) {
+            auto recipe = [](const char* name, const char* profile, double doseG,
+                             double yieldG, const char* grind = "") {
+                return QVariantMap{
+                    {QStringLiteral("name"), QString::fromUtf8(name)},
+                    {QStringLiteral("profileTitle"), QString::fromUtf8(profile)},
+                    {QStringLiteral("drinkType"), QStringLiteral("espresso")},
+                    {QStringLiteral("doseG"), doseG},
+                    {QStringLiteral("yieldValue"), yieldG},
+                    {QStringLiteral("yieldMode"), QStringLiteral("absolute")},
+                    {QStringLiteral("grindPinned"), QString::fromUtf8(grind)},
+                };
+            };
+            m_recipeStorage->requestSeedRecipesIfEmpty({
+                recipe("Adaptive v3", "Adaptive v3", 18, 36),
+                recipe("Gentle & Sweet", "Gentle and sweet", 18, 36),
+                recipe("Turbo Shot", "Turbo Shot", 19, 54, "9.6"),
+                recipe("Blooming Espresso (Rao)", "Blooming Espresso", 18, 45),
+                recipe("Decent Default", "Default", 18, 36),
+                recipe("A-Flow Light", "A-Flow / default-light", 18, 45),
+                recipe("Rao Allongé", "Rao Allongé", 18, 90),
+            });
+            plusState.setValue(QStringLiteral("decenzaPlus/recipesSeeded"), true);
+        }
+    }
+#endif
+
     // One-time idle-button injections (issue #1586). What the gate means is
     // documented on ShotHistoryStorage::crossedSchemaVersion; what the injections
     // guarantee is documented on their declarations in settings_network.h.

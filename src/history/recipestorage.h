@@ -357,6 +357,10 @@ public:
     // untouched. Emits recipeUpdated + recipesChanged like any update.
     Q_INVOKABLE void requestRelinkRecipeToBag(qint64 recipeId, qint64 bagId);
 
+    // Inserts `recipes` (Recipe variant maps, in MRU order) only when the table
+    // holds no recipe at all, archived included. Emits recipesChanged() if any landed.
+    void requestSeedRecipesIfEmpty(const QVariantList& recipes);
+
     // Async writes — all emit recipesChanged() on success.
     Q_INVOKABLE void requestCreateRecipe(const QVariantMap& recipe);        // recipeCreated()
     Q_INVOKABLE void requestUpdateRecipe(qint64 recipeId, const QVariantMap& fields); // recipeUpdated()

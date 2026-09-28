@@ -576,6 +576,28 @@ void RecipeStorage::requestCreateRecipe(const QVariantMap& recipeMap)
         });
 }
 
+void RecipeStorage::requestSeedRecipesIfEmpty(const QVariantList& recipes)
+{
+    auto inserted = std::make_shared<int>(0);
+    runAsync("recipes_seed",
+        [recipes, inserted](QSqlDatabase& db) {
+            if (!loadInventoryStatic(db, false).isEmpty() || !loadInventoryStatic(db, true).isEmpty())
+                return;
+            const qint64 now = QDateTime::currentSecsSinceEpoch();
+            for (qsizetype i = 0; i < recipes.size(); ++i) {
+                Recipe recipe = Recipe::fromVariantMap(recipes.at(i).toMap());
+                recipe.lastUsedEpoch = now - i;
+                if (insertRecipeStatic(db, recipe) > 0)
+                    ++*inserted;
+            }
+            DIAG_INFO(RECIPES, "RecipeStorage") << "seeded" << *inserted << "starter recipes";
+        },
+        [this, inserted](bool) {
+            if (*inserted > 0)
+                emit recipesChanged();
+        });
+}
+
 void RecipeStorage::requestUpdateRecipe(qint64 recipeId, const QVariantMap& fields)
 {
     // Guarantee a terminal recipeUpdated even when uninitialized (see
