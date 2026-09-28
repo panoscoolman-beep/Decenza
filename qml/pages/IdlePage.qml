@@ -100,6 +100,8 @@ T.Page {
     property var bottomRightItems: layoutConfig.zones ? (layoutConfig.zones.bottomRight || []) : []
     // Lower-mid bar: optional full-width band above the bottom action bar.
     property var lowerMidBarItems: layoutConfig.zones ? (layoutConfig.zones.lowerMidBar || []) : []
+    // A recipeGallery widget in centerMiddle turns the whole centre into the recipe gallery home.
+    readonly property bool galleryMode: centerMiddleItems.some(function(item) { return item.type === "recipeGallery" })
 
     // Center zone Y-offsets (user-configurable positioning)
     property int centerStatusYOffset: layoutConfig.offsets ? (layoutConfig.offsets.centerStatus || 0) : 0
@@ -899,6 +901,7 @@ T.Page {
     // Top info section (from layout topLeft/topRight zones)
     // ============================================================
     ColumnLayout {
+        id: topInfo
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
@@ -935,8 +938,21 @@ T.Page {
     // ============================================================
     // Center content (from layout centerTop/centerMiddle zones)
     // ============================================================
+    // Recipe gallery home, in place of the centre zones (galleryMode).
+    Loader {
+        active: idlePage.galleryMode
+        visible: active
+        anchors.top: topInfo.bottom
+        anchors.bottom: lowerMidBar.visible ? lowerMidBar.top : bottomBar.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.margins: Theme.standardMargin
+        sourceComponent: RecipeGallery {}
+    }
+
     ColumnLayout {
         id: centerContent
+        visible: !idlePage.galleryMode
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter

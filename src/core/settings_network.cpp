@@ -977,6 +977,8 @@ const QVector<WidgetCatalogEntry>& widgetCatalogTable() {
         { "separator", 2, "layoutEditor.widgetSeparator", "Separator",  "layoutEditor.chipSep",       "Sep",        "special", true },
         { "spacer",    2, "layoutEditor.widgetSpacer",    "Spacer",     "layoutEditor.chipSpacer",    "Spacer",     "special", true },
         { "weather",   2, "layoutEditor.widgetWeather",   "Weather",    "layoutEditor.chipWeather",   "Weather",    "special", true },
+        // Placed in centerMiddle it switches the idle page to the recipe gallery home.
+        { "recipeGallery", 2, "layoutEditor.widgetRecipeGallery", "Recipe Gallery", "layoutEditor.chipRecipeGallery", "Gallery", "special", true },
         // Screensavers (3)
         { "screensaverPipes",     3, "layoutEditor.widget3DPipes",    "3D Pipes",   "layoutEditor.chipPipes",     "Pipes",     "screensaver", true },
         { "screensaverAttractor", 3, "layoutEditor.widgetAttractors", "Attractors", "layoutEditor.chipAttractor", "Attractor", "screensaver", true },

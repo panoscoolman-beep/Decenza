@@ -1462,6 +1462,9 @@ set(QML_FILES
     qml/components/RecipeSection.qml
     qml/components/RecipeRow.qml
     qml/components/RecipeDrinkCard.qml
+    qml/components/RecipeArt.qml
+    qml/components/RecipeGallery.qml
+    qml/components/GramsEditorPopup.qml
     qml/components/RecipeField.qml
     qml/components/RecipeResolver.qml
     qml/components/DrinkType.qml
@@ -1520,6 +1523,7 @@ set(QML_FILES
     qml/components/GraphUtils.js
     qml/components/qrcode.js
     qml/components/RecipeSearch.js
+    qml/components/RecipeArtMotifs.js
     qml/components/SettingsSearchIndex.js
     qml/components/SettingsTabs.qml
     qml/components/SettingsActionRow.qml
@@ -1534,6 +1538,7 @@ set(QML_FILES
     qml/components/layout/items/FlushItem.qml
     qml/components/layout/items/BeansItem.qml
     qml/components/layout/items/RecipesItem.qml
+    qml/components/layout/items/RecipeGalleryItem.qml
     qml/components/layout/items/EquipmentItem.qml
     qml/components/layout/items/HistoryItem.qml
     qml/components/layout/items/DiscussItem.qml

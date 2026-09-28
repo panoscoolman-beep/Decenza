@@ -976,6 +976,26 @@ QtObject {
     property color dyeTdsColor: _c("dyeTdsColor", Settings.theme.customThemeColors.dyeTdsColor || "#FF9800")
     property color dyeEyColor: _c("dyeEyColor", Settings.theme.customThemeColors.dyeEyColor || "#a2693d")
 
+    // Recipe gallery cover art (RecipeArt.qml), one entry per motif. These are illustration
+    // colours, not chrome: each entry is a contrast set (ink on base, light on ink), so they are
+    // deliberately not routed through customThemeColors, where recolouring one would break it.
+    readonly property var recipeArtPalette: ({
+        rings:  { base: "#f2a93b", ink: "#7a4a0c", light: "#fff1d6", mid: "#f7c878" },
+        hills:  { base: "#f39bbd", ink: "#7c2447", light: "#ffe3ee", mid: "#ffd3e3" },
+        bolt:   { base: "#6f97ff", ink: "#16307a", light: "#e2eaff", mid: "#a9c1ff" },
+        flower: { base: "#ff8a66", ink: "#7a2410", light: "#ffe4da", mid: "#ffb49c" },
+        cup:    { base: "#9fd18c", ink: "#2f5a22", light: "#ecf8e6", mid: "#c6e6ba" },
+        sun:    { base: "#ecd85a", ink: "#6b5c08", light: "#fffadb", mid: "#f4e79a" },
+        glass:  { base: "#b59cff", ink: "#3d2687", light: "#efe9ff", mid: "#b59cff" },
+        leaf:   { base: "#7fd1c0", ink: "#115246", light: "#e3f8f3", mid: "#b5e6dc" }
+    })
+    // Text drawn directly on a recipeArtPalette base colour, and the dark name band a tile lays
+    // over its art (fixed for the same reason: it sits on the art, not on the themed page).
+    readonly property color recipeArtOnBaseColor: "#0d0d0f"
+    readonly property color recipeArtLabelBandColor: Qt.rgba(0.05, 0.05, 0.06, 0.82)
+    readonly property color recipeArtLabelColor: "#f4f2ef"
+    readonly property color recipeArtLabelSecondaryColor: "#c9c5bf"
+
     // The bundled UI family ("Decenza Sans"), or empty when registration failed — an empty
     // family in Qt.font() falls back to the application default, preserving the graceful
     // degradation main.cpp already provides. Stated explicitly on every role rather than
