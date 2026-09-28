@@ -1211,6 +1211,12 @@ target_compile_definitions(Decenza PRIVATE
 set(DECENZA_UPDATE_REPO "Kulitorum/Decenza" CACHE STRING "owner/repo the in-app updater checks")
 target_compile_definitions(Decenza PRIVATE DECENZA_UPDATE_REPO="${DECENZA_UPDATE_REPO}")
 
+# Decenza+ (the fork's CI build): the recipe gallery is the idle home out of the box.
+option(DECENZA_PLUS "Build the Decenza+ fork (recipe gallery home by default)" OFF)
+if(DECENZA_PLUS)
+    target_compile_definitions(Decenza PRIVATE DECENZA_PLUS)
+endif()
+
 # Link SerialPort only on desktop (not available on Android/iOS)
 if(NOT ANDROID AND NOT IOS)
     target_link_libraries(Decenza PRIVATE Qt6::SerialPort)

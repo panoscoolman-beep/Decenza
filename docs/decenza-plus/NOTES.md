@@ -10,6 +10,8 @@ Branch: `claude/recipe-gallery-home`.
   switches the idle page to coloured recipe tiles (`RecipeGallery.qml`, `RecipeArt.qml`,
   `RecipeArtMotifs.js`) with the selected recipe's profile graph, In/Out steppers, ratio
   presets and a full-screen grams editor (`GramsEditorPopup.qml`). The shot page is untouched.
+  Decenza+ builds (`-DDECENZA_PLUS=ON`) make it the default home and add it once to an
+  existing/restored layout (marker `plusGalleryHome` in the layout JSON).
 - **Installs beside the official app** — CI sets application id
   `io.github.kulitorum.decenza_de1.plus`, label `Decenza+`, and points the in-app updater at
   this fork's releases (`DECENZA_UPDATE_REPO`). Official/local builds are unchanged.

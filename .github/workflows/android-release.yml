@@ -69,7 +69,7 @@ jobs:
           echo "build_code=$CODE" >> $GITHUB_OUTPUT
           echo "DECENZA_APPLICATION_ID=io.github.kulitorum.decenza_de1.plus" >> $GITHUB_ENV
           echo "DECENZA_APP_LABEL=Decenza+" >> $GITHUB_ENV
-          echo "FORK_CMAKE_ARGS=-DDECENZA_UPDATE_REPO=${{ github.repository }}" >> $GITHUB_ENV
+          echo "FORK_CMAKE_ARGS=-DDECENZA_UPDATE_REPO=${{ github.repository }} -DDECENZA_PLUS=ON" >> $GITHUB_ENV
           echo "Fork build $CODE for ${{ github.repository }}"
 
       - name: Get version info

@@ -3,6 +3,7 @@
 #include "settings.h"
 
 #include <QJsonArray>
+#include <algorithm>
 #include <QJsonDocument>
 #include <QDesktopServices>
 #include <QHash>
@@ -297,9 +298,16 @@ QString SettingsNetwork::defaultLayoutJson() const {
         QJsonObject({{"type", "steam"}, {"id", "steam1"}}),
         QJsonObject({{"type", "hotwater"}, {"id", "hotwater1"}}),
     });
+#ifdef DECENZA_PLUS
+    zones["centerMiddle"] = QJsonArray({
+        QJsonObject({{"type", "recipeGallery"}, {"id", "recipeGallery1"}}),
+    });
+    layout["plusGalleryHome"] = true;
+#else
     zones["centerMiddle"] = QJsonArray({
         QJsonObject({{"type", "shotPlan"}, {"id", "plan1"}}),
     });
+#endif
     zones["bottomLeft"] = QJsonArray({
         QJsonObject({{"type", "sleep"}, {"id", "sleep1"}}),
     });
@@ -423,7 +431,25 @@ QJsonObject SettingsNetwork::getLayoutObject() const {
     // (issue #1586). Presence is user-editable state and was never a valid
     // once-only gate.
 
-    if (textMigrated || connMigrated) {
+    // Decenza+: put the recipe gallery on the idle home once per stored layout. The
+    // marker lives in the layout itself, so a layout restored from the official app
+    // gets the gallery too, while a user who removes it does not get it back (#1586).
+    bool galleryMigrated = false;
+#ifdef DECENZA_PLUS
+    if (!layout.value("plusGalleryHome").toBool()) {
+        QJsonArray middle = zones["centerMiddle"].toArray();
+        const bool present = std::any_of(middle.constBegin(), middle.constEnd(), [](const QJsonValue& v) {
+            return v.toObject()["type"].toString() == "recipeGallery";
+        });
+        if (!present)
+            middle.prepend(QJsonObject({{"type", "recipeGallery"}, {"id", "recipeGallery1"}}));
+        zones["centerMiddle"] = middle;
+        layout["plusGalleryHome"] = true;
+        galleryMigrated = true;
+    }
+#endif
+
+    if (textMigrated || connMigrated || galleryMigrated) {
         layout["zones"] = zones;
         // Persist the migration so it only runs once
         const_cast<SettingsNetwork*>(this)->saveLayoutObject(layout);
