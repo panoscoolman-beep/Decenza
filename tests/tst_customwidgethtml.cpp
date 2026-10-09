@@ -19,7 +19,9 @@
 
 #include <QtTest>
 #include <QJSEngine>
+#include <QDirIterator>
 #include <QFile>
+#include <QFileInfo>
 #include <QRegularExpression>
 #include <QTextDocument>
 #include <QTextCursor>
@@ -53,6 +55,7 @@ private slots:
     void everyGestureCapableTypeRoutesThroughTheSharedHelper();
     void everyGestureHandlerCanActuallyFire();
     void sleepDefaultsComeFromOneTable();
+    void everyInAppQuitAsksFirst();
 
 private:
     QJSEngine m_engine;
@@ -886,6 +889,32 @@ void TestCustomWidgetHtml::sleepDefaultsComeFromOneTable()
     const QString sleepBlock = delegate.mid(sleepCase, 900);
     QVERIFY2(sleepBlock.contains(QStringLiteral("modelData.allowQuit")),
              "the compiled Sleep tile no longer reads the instance's allowQuit");
+
+// Every in-app quit asks once: the Quit widget, Sleep's long-press and the "quit" layout action
+// raise AppShell.quitRequested(), and only the shell (main.qml) quits. A Qt.quit() anywhere else
+// in qml/ is a quit with no confirmation, the accidental exit this exists to prevent.
+void TestCustomWidgetHtml::everyInAppQuitAsksFirst()
+{
+    QDirIterator it(QStringLiteral(DECENZA_SOURCE_DIR) + QStringLiteral("/qml"),
+                    {QStringLiteral("*.qml"), QStringLiteral("*.js")}, QDir::Files,
+                    QDirIterator::Subdirectories);
+    int scanned = 0;
+    while (it.hasNext()) {
+        const QString path = it.next();
+        if (QFileInfo(path).fileName() == QStringLiteral("main.qml"))
+            continue;
+        QFile f(path);
+        QVERIFY2(f.open(QIODevice::ReadOnly | QIODevice::Text), qPrintable("could not read " + path));
+        ++scanned;
+        QVERIFY2(!QString::fromUtf8(f.readAll()).contains(QStringLiteral("Qt.quit()")),
+                 qPrintable(path + " quits without the confirmation; raise AppShell.quitRequested()"));
+    }
+    QVERIFY2(scanned > 200, "too few QML files scanned; this test is now blind");
+
+    const QString shell = readSource(QStringLiteral("/qml/main.qml"));
+    QVERIFY2(shell.contains(QStringLiteral("function onQuitRequested()"))
+             && shell.contains(QStringLiteral("quitConfirmDialog.open()")),
+             "the shell no longer confirms AppShell.quitRequested()");
 }
 
 QTEST_MAIN(TestCustomWidgetHtml)
