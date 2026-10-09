@@ -2160,6 +2160,7 @@ T.ApplicationWindow {
         Tr { id: trNoScaleAnnounce; key: "main.dialog.noScale.announce"; fallback: "Shot stopped. Scale is not connected."; visible: false }
 
         onOpened: {
+            (noScaleReconnectButton.visible ? noScaleReconnectButton : noScaleConnectionsButton).forceActiveFocus()
             if (AccessibilityManager.enabled) {
                 AccessibilityManager.announce(trNoScaleAnnounce.text, true)
             }
@@ -2175,19 +2176,82 @@ T.ApplicationWindow {
                 anchors.horizontalCenter: parent.horizontalCenter
             }
 
+            // New key rather than a reworded fallback: the old text named a "Bluetooth" tab that
+            // does not exist, and a reworded fallback keeps rendering every existing translation of it.
             Tr {
-                key: "main.dialog.noScale.message"
-                fallback: "Your saved scale is not connected.\n\nPlease turn on your scale and wait for it to connect before starting a shot.\n\nTo use the app without a scale, go to Settings \u2192 Bluetooth and tap \u0022Forget Scale\u0022."
+                key: "main.dialog.noScale.messageConnections"
+                fallback: "Your saved scale is not connected.\n\nTurn on your scale and wait for it to connect, then start the shot again.\n\nTo brew without a scale, open Settings \u2192 Connections and tap \u0022Forget\u0022 next to the scale."
                 wrapMode: Text.Wrap
                 width: parent.width
                 font: Theme.bodyFont
             }
 
-            AccessibleButton {
-                text: trCommonOk.text
-                accessibleName: trCommonDismissDialog.text
+            // Stacked rather than a Row: three buttons overflow Theme.dialogWidth on a phone.
+            FocusScope {
                 anchors.horizontalCenter: parent.horizontalCenter
-                onClicked: noScaleAbortDialog.close()
+                width: noScaleActions.width
+                height: noScaleActions.height
+
+                Column {
+                    id: noScaleActions
+                    spacing: Theme.spacingSmall
+
+                    AccessibleButton {
+                        id: noScaleReconnectButton
+                        // A USB (or simulator) scale is not on the reconnect ladder, so this
+                        // button could only close the dialog; Open Connections still applies.
+                        visible: BLEManager.scaleAddressIsLadderDialable(Settings.scaleAddress)
+                        text: TranslationManager.translate("main.dialog.noScale.reconnect", "Reconnect scale")
+                        accessibleName: TranslationManager.translate("main.dialog.noScale.reconnectAccessible", "Try to reconnect the saved scale now")
+                        primary: true
+                        activeFocusOnTab: true
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        KeyNavigation.tab: noScaleConnectionsButton
+                        KeyNavigation.backtab: noScaleOkButton
+                        onClicked: {
+                            noScaleAbortDialog.close()
+                            // 0: try now. The ramp's own first step waits 5 s, which reads as
+                            // a button that did nothing.
+                            BLEManager.requestScaleReconnectRampRestart(
+                                "Shot-stopped notice: reconnect requested", 0)
+                        }
+                    }
+
+                    AccessibleButton {
+                        id: noScaleConnectionsButton
+                        text: TranslationManager.translate("main.dialog.noScale.openConnections", "Open Connections")
+                        accessibleName: TranslationManager.translate("main.dialog.noScale.openConnectionsAccessible", "Open the Connections settings to pair or forget the scale")
+                        activeFocusOnTab: true
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        KeyNavigation.tab: noScaleOkButton
+                        KeyNavigation.backtab: noScaleReconnectButton.visible ? noScaleReconnectButton : noScaleOkButton
+                        onClicked: {
+                            noScaleAbortDialog.close()
+                            // A preheat abort leaves the idle Espresso page on the stack; leave
+                            // it first so Back from Settings does not land there, and an
+                            // already-open Settings page underneath is reused. The abort's Idle
+                            // may still be in flight, so the Espresso page during preheat counts
+                            // as idle. Any other running operation's page holds its Stop button.
+                            const preheatOnEspressoPage = MachineState.phase === MachineState.Phase.EspressoPreheating
+                                && pageStack.currentItem
+                                && pageStack.currentItem.objectName === "espressoPage"
+                            if (!root.operationActive || preheatOnEspressoPage)
+                                root.leaveOperationPage()
+                            root.goToSettings("connections")
+                        }
+                    }
+
+                    AccessibleButton {
+                        id: noScaleOkButton
+                        text: trCommonOk.text
+                        accessibleName: trCommonDismissDialog.text
+                        activeFocusOnTab: true
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        KeyNavigation.tab: noScaleReconnectButton.visible ? noScaleReconnectButton : noScaleConnectionsButton
+                        KeyNavigation.backtab: noScaleConnectionsButton
+                        onClicked: noScaleAbortDialog.close()
+                    }
+                }
             }
         }
     }
