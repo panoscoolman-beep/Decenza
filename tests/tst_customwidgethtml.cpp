@@ -52,6 +52,7 @@ private slots:
     void gestureDestinationsAreDeclaredExactlyOnce();
     void everyGestureCapableTypeRoutesThroughTheSharedHelper();
     void everyGestureHandlerCanActuallyFire();
+    void sleepDefaultsComeFromOneTable();
 
 private:
     QJSEngine m_engine;
@@ -74,6 +75,8 @@ const auto kItemDelegate    = QStringLiteral("/qml/components/layout/LayoutItemD
 const auto kShotHistoryPage = QStringLiteral("/qml/pages/ShotHistoryPage.qml");
 const auto kWebLayout       = QStringLiteral("/src/network/shotserver_layout.cpp");
 const auto kStorageQueries  = QStringLiteral("/src/history/shothistorystorage_queries.cpp");
+const auto kSleepEditor     = QStringLiteral("/qml/components/layout/SleepEditorPopup.qml");
+const auto kLayoutTab       = QStringLiteral("/qml/pages/settings/SettingsLayoutTab.qml");
 inline QString widgetItem(const QString &name) {
     return QStringLiteral("/qml/components/layout/items/%1.qml").arg(name);
 }
@@ -831,6 +834,58 @@ void TestCustomWidgetHtml::clearColorLeavesOtherRunsAlone()
     QVERIFY2(!segments.at(0).toMap().contains(QStringLiteral("color")), "first run should be Default");
     QCOMPARE(segments.at(1).toMap().value(QStringLiteral("color")).toString(),
              QStringLiteral("#00ff00"));
+}
+
+// The Sleep widget's option defaults lived in five places (the widget, the compiled
+// center-zone tile in LayoutItemDelegate, its editor, the layout tab that opens the editor,
+// and the web editor), each hard-coding quit-on-long-press. They now read SettingsNetwork's
+// table; this fails if any of them grows its own literal back, or stops reading the table.
+void TestCustomWidgetHtml::sleepDefaultsComeFromOneTable()
+{
+    const QString web = readSource(SrcPath::kWebLayout);
+    QVERIFY2(!web.isEmpty(), "could not read shotserver_layout.cpp");
+    QVERIFY2(web.contains(QStringLiteral("sleepOptionDefaultsJson()")),
+             "the web editor no longer injects SettingsNetwork::sleepOptionDefaultsJson()");
+    QVERIFY2(web.contains(QStringLiteral("SLEEP_DEFAULTS.allowQuit"))
+             && web.contains(QStringLiteral("SLEEP_DEFAULTS.showIcon")),
+             "the web Sleep editor no longer reads the injected SLEEP_DEFAULTS");
+    static const QRegularExpression webLiteral(
+        QStringLiteral("(allowQuit|showIcon)\\s*===\\s*undefined\\)\\s*\\?\\s*(true|false)\\b"));
+    QVERIFY2(!webLiteral.match(web).hasMatch(),
+             "the web Sleep editor hard-codes a default again");
+
+    static const QRegularExpression qmlLiteral(
+        QStringLiteral("(allowQuit|showIcon)\\s*!==\\s*undefined\\)?\\s*\\?[^:]{0,200}:\\s*(true|false)\\b"
+                       "|(allowQuit|showIcon)\\s*\\?\\?\\s*(true|false)\\b"));
+    static const QRegularExpression propertyLiteral(
+        QStringLiteral("property\\s+bool\\s+(allowQuit|showIcon)\\s*:\\s*(true|false)\\b"));
+    for (const QString &rel : { SrcPath::widgetItem(QStringLiteral("SleepItem")),
+                                SrcPath::kSleepEditor, SrcPath::kLayoutTab,
+                                SrcPath::kItemDelegate }) {
+        const QString src = readSource(rel);
+        QVERIFY2(!src.isEmpty(), qPrintable("could not read " + rel));
+        QVERIFY2(src.contains(QStringLiteral("sleepOptionDefaults()")),
+                 qPrintable(rel + " no longer reads Settings.network.sleepOptionDefaults()"));
+        QVERIFY2(!qmlLiteral.match(src).hasMatch() && !propertyLiteral.match(src).hasMatch(),
+                 qPrintable(rel + " hard-codes a Sleep option default again"));
+    }
+
+    // The compiled tile's gesture is the other shape the default can hide in: an
+    // unconditional quit on long-press, whatever allowQuit says.
+    const QString delegate = readSource(SrcPath::kItemDelegate);
+    static const QRegularExpression compiledQuit(
+        QStringLiteral("case\\s+\"sleep\"[^}]*longPressAction:\\s*\"command:quit\""));
+    QVERIFY2(!compiledQuit.match(delegate).hasMatch(),
+             "the compiled Sleep tile quits on long-press regardless of allowQuit again");
+    // ...and the reverse: a tile that reads only the default would ignore a stored option.
+    // From compileToCustom(), not isCompiledType's bare `case "sleep":` above it.
+    const qsizetype compileFn = delegate.indexOf(QStringLiteral("function compileToCustom("));
+    QVERIFY2(compileFn >= 0, "LayoutItemDelegate no longer has compileToCustom()");
+    const qsizetype sleepCase = delegate.indexOf(QStringLiteral("case \"sleep\""), compileFn);
+    QVERIFY2(sleepCase >= 0, "LayoutItemDelegate no longer compiles a sleep tile");
+    const QString sleepBlock = delegate.mid(sleepCase, 900);
+    QVERIFY2(sleepBlock.contains(QStringLiteral("modelData.allowQuit")),
+             "the compiled Sleep tile no longer reads the instance's allowQuit");
 }
 
 QTEST_MAIN(TestCustomWidgetHtml)

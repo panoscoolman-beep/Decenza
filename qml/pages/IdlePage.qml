@@ -40,8 +40,13 @@ T.Page {
         }
     }
 
-    // Secret developer mode: hold top-right corner for 5 seconds to simulate a completed shot
+    // Developer shortcut: hold the top-right corner for 5 seconds to simulate a completed shot.
+    // Debug builds and Simulation Mode only: it saves into the real shot history and clears the
+    // current shot notes, and an 80x80 corner is easy to hold by accident on a release tablet.
     Item {
+        // DE1Device.simulationMode is the live state; Settings.app.simulationMode is the
+        // choice for the next launch, and Ctrl+D changes only the device's.
+        visible: Settings.app.isDebugBuild || DE1Device.simulationMode
         anchors.top: parent.top
         anchors.right: parent.right
         width: Theme.scaled(80)
