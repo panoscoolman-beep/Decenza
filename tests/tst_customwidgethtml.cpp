@@ -889,6 +889,7 @@ void TestCustomWidgetHtml::sleepDefaultsComeFromOneTable()
     const QString sleepBlock = delegate.mid(sleepCase, 900);
     QVERIFY2(sleepBlock.contains(QStringLiteral("modelData.allowQuit")),
              "the compiled Sleep tile no longer reads the instance's allowQuit");
+}
 
 // Every in-app quit asks once: the Quit widget, Sleep's long-press and the "quit" layout action
 // raise AppShell.quitRequested(), and only the shell (main.qml) quits. A Qt.quit() anywhere else
